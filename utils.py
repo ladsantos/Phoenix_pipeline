@@ -10,7 +10,7 @@ def show_image(image,
                show_colorbar=True, show_ticks=True,
                fig=None, ax=None, input_ratio=None):
     """
-    Show an image in matplotlib with some basic astronomically-appropriat stretching.
+    Show an image in matplotlib with some basic astronomically-appropriate stretching.
     
     This function is taken from the CCD Data reduction guide:
     https://mwcraig.github.io/ccd-as-book/00-00-Preface.html
