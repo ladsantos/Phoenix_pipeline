@@ -1,3 +1,4 @@
+import numpy as np
 from astropy import visualization as aviz
 from astropy.nddata.utils import block_reduce, Cutout2D
 from matplotlib import pyplot as plt
@@ -149,3 +150,7 @@ def find_nearest_dark_exposure(image, dark_exposure_times, tolerance=0.5):
         
     
     return closest_dark_exposure
+
+
+def inverse_median(a):
+	return 1/np.median(a)
