@@ -100,7 +100,7 @@ if file_b is not None:
 	files_f_cali = files_f.files_filtered(imagetyp = 'FLATFIELD', include_path = True)
 	for ccd, file_name in files_f_cali.ccds(imagetyp = 'FLATFIELD', ccd_kwargs = {'unit' : 'adu'}, return_fname = True):
 		# Subtract bias
-		ccd = ccd.subtract_bias(ccd, master_bias)
+		ccd = ccdp.subtract_bias(ccd, master_bias)
 		closest_dark = utl.find_nearest_dark_exposure(ccd, dark_times)
 		if len(closest_dark) != 0:
 			# Subtracting Darks
@@ -110,6 +110,7 @@ if file_b is not None:
 			closest_dark = utl.find_nearest_dark_exposure(ccd, dark_times, tolerance = 100)
 			# Subtract scaled Dark
 			ccd = ccdp.subtract_dark( ccd, master_darks[closest_dark[0]], exposure_time = 'exptime', exposure_unit = u.second, scale = True)
+			ccd.write(cali_flat_path / ('dark-' + file_name))
 	#--------------------------------
 	#--------Creating Master-Flat----
 	#--------------------------------
@@ -121,4 +122,24 @@ if file_b is not None:
 	# Reading master flat
 	red_flats = ccdp.ImageFileCollection(cali_flat_path)
 	master_flat = red_flats.files_filtered(imagetype = 'FLATFIELD', combined = True)
-	
+	#--------------------------------
+	#---Calibratin Science Images----
+	#--------------------------------
+	cali_science_path = Path(path_s / 'cali_science')
+	cali_science_path.mkdir(exist_ok = True)
+	files_s_cali = files_s.files_filtered(imagetyp = 'object', include_path = True)
+	for ccd, file_name in files_s_cali.ccds(imagetyp = 'object', ccd_kwargs = {'unit' : 'adu'}, return_fname = True):
+		# Subtract bias
+		ccd = ccdp.subtract_bias(ccd, master_bias)
+		closest_dark = utl.find_nearest_dark_exposure(ccd, dark_times)
+		if len(closest_dark) != 0:
+			# Subtracting Darks
+			ccd = ccdp.subtract_dark(ccd, master_darks[closest_dark], exposure_time = 'exptime', exposure_unit = u.second)
+			ccd = ccdp.flat_correct(ccd, master_flat)
+			ccd.write(cali_science_path / file_name)
+		else:
+			closest_dark = utl.find_nearest_dark_exposure(ccd, dark_times, tolerance = 100)
+			# Subtract scaled Dark
+			ccd = ccdp.subtract_dark( ccd, master_darks[closest_dark[0]], exposure_time = 'exptime', exposure_unit = u.second, scale = True)
+			ccd = ccdp.flat_correct(ccd, master_flat)
+			ccd.write(cali_science_path / file_name)
