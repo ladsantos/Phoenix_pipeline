@@ -144,9 +144,9 @@ def find_nearest_dark_exposure(image, dark_exposure_times, tolerance=0.5):
 
     if (tolerance is not None and 
         np.abs(image.header['exptime'] - closest_dark_exposure) > tolerance):
-        
-        raise RuntimeError('Closest dark exposure time is {} for flat of exposure '
-                           'time {}.'.format(closest_dark_exposure, a_flat.header['exptime']))
+        return None
+        #raise RuntimeError('Closest dark exposure time is {} for flat of exposure '
+                           #'time {}.'.format(closest_dark_exposure, image.header['exptime']))
         
     
     return closest_dark_exposure
