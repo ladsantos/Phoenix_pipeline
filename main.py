@@ -4,6 +4,7 @@ import os
 from pathlib import Path
 from astropy.nddata import CCDData
 import ccdproc as ccdp
+from astropy.stats import mad_std
 
 
 #-----------------------------------
@@ -47,34 +48,17 @@ else:
 
 #-----------------------------------
 #
-#------Checking for overscan--------
-#
-#-----------------------------------
-
-oscn = np.array([])
-for f1 in files_s.hdus():
-	xx = 'biassec' in a.header
-	if xx:
-		oscn = np.hstack((oscn, a.header['biassec']))
-	else:
-		oscn = np.hstack((oscn, xx))
-
-if oscn[0] == 0:
-	print('No Overscan detected!')
-	osn1 = input('If there is overscan, but not detected, then please type the region of overscan: ')
-	osn = True
-	if osn = '':
-		osn = False
-else:
-	osn1 = input('Please input the useful region of overscan: ')
-	osn = True
-
-
-#-----------------------------------
-#
 #--------Calibrating Images---------
 #
 #-----------------------------------
+#---If bias file exists---
 if file_b is not None:
-	if osn:
-		
+	#-------------------------------
+	#------Creating Master-bias-----
+	#-------------------------------
+	cali_bias_path = Path(path_b / 'master_bias')
+	cali_bias_path.mkdir(exist_ok=True)
+	combined_bias = ccdp.combine(files_b, method='average', sigma_clip=True, sigma_clip_low_thresh=5, sigma_clip_high_thresh=5, sigma_clip_func=np.ma.median, sigma_clip_dev_func=mad_std, mem_limit=350e6)
+	combined_bias.meta['combined'] = True
+	combined_bias.write(cali_bias_path / 'master_bias.fit')
+	
