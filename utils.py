@@ -4,7 +4,7 @@ from astropy.nddata.utils import block_reduce, Cutout2D
 from matplotlib import pyplot as plt
 
 
-def show_image(image,
+def show_image(image, name = 'Image',
                percl=99, percu=None, is_mask=False,
                figsize=(10, 10),
                cmap='viridis', log=False, clip=True,
@@ -20,6 +20,8 @@ def show_image(image,
     ----------
     image
         The image to show
+    name : str
+        Name of the image that you want to provide the result file. Default is Image.
     percl : number
         The percentile for the lower edge of the stretch (or both edges if ``percu`` is None)
     percu : number or None
@@ -106,7 +108,7 @@ def show_image(image,
 
     if not show_ticks:
         ax.tick_params(labelbottom=False, labelleft=False, labelright=False, labeltop=False)
-    fig.savefig('Image.png')
+    fig.savefig(name + '.png')
 
 
 
