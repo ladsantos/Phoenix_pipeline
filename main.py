@@ -16,10 +16,11 @@ import shutil
 #-----------------------------------
 """
 x_b = ''
-x_d = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/06_Nov_2009/dark/'
-x_f = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/06_Nov_2009/flat/'
-x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/06_Nov_2009/telluric_standard/'
-it_s = 'STANDARD'
+x_d = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/dark/'
+x_f = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/flat/'
+#x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/telluric_standard/'
+x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/WASP-7/'
+it_s = 'object'
 """
 x_b = input('Enter the path of Bias images, if there are none then press Enter: ')
 x_d = input('Enter the path of Dark images: ')
@@ -88,7 +89,7 @@ files_d_cali = files_d.files_filtered(imagetyp = 'DARK', include_path = True)
 for ccd, file_name in files_d.ccds(imagetyp = 'DARK', return_fname = True, ccd_kwargs = {'unit':'adu'}):
 	if master_bias is not None:
 		# Subtract bias
-		ccd = ccd.subtract_bias(ccd, master_bias)
+		ccd = ccdp.subtract_bias(ccd, master_bias)
 	else:
 		ccd = ccd
 	# Save the result 
@@ -155,6 +156,32 @@ combined_flat = CCDData.read(cali_flat_path / 'master_flat.fits')#{ccd.header['i
 cali_science_path = Path(path_s / 'cali_science')
 cali_science_path.mkdir(exist_ok = True)
 files_s_cali = files_s.files_filtered(imagetyp = it_s, include_path = True)
+# Creating a list of spectrum images
+files_spec = files_s.summary['file', 'view_pos']
+files_spec_list = np.array([])
+for i in range(len(files_spec)):
+	xxx = files_spec['view_pos'][i]
+	if xxx[0:4] == 'open':
+		files_spec_list = np.hstack((files_spec_list, files_spec['file'][i]))
+
+# Sky subtracting images
+j = 0
+for i in range(int(len(files_spec_list))/2):
+	ccd1 = CCDData.read(files_spec_list[j], unit='adu')
+	ccd2 = CCDData.read(files_spec_list[j+1], unit = 'adu')
+	sky_sub1 = ccd1.data - ccd2.data
+	ss1 = CCDData(sky_sub1, unit='adu')
+	ss1.header = ccd1.header
+	ss1.meta['sky_sub'] = True
+	ss1.write(cali_science_path / 'sky_sub_' + files_spec_list[j] + '_.fits')
+	sky_sub2 = ccd2.data - ccd1.data
+	ss2 = CCDData(sky_sub2, unit='adu')
+	ss2.header = ccd2.header
+	ss2.meta['sky_sub'] = True
+	ss2.write(cali_science_path / 'sky_sub_' + files_spec_list[j+1] + '_.fits')
+	j = j+2
+
+# Correcting for flat
 for ccd, file_name in files_s.ccds(imagetyp = it_s, ccd_kwargs = {'unit' : 'adu'}, return_fname = True):
 	# Subtract bias
 	if master_bias is not None:
