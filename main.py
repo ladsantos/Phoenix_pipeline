@@ -14,10 +14,19 @@ import shutil
 #-------Loading data files----------
 #
 #-----------------------------------
-x_b = ''#input('Enter the path of Bias images, if there are none then press Enter: ')
-x_d = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/06_Nov_2009/dark/'#input('Enter the path of Dark images: ')
-x_f = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/06_Nov_2009/flat/'#input('Enter the path of Flat-field images: ')
-x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/06_Nov_2009/WASP-7/'#input('Enter the path of Science images: ')
+"""
+x_b = ''
+x_d = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/06_Nov_2009/dark/'
+x_f = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/06_Nov_2009/flat/'
+x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/06_Nov_2009/telluric_standard/'
+it_s = 'STANDARD'
+"""
+x_b = input('Enter the path of Bias images, if there are none then press Enter: ')
+x_d = input('Enter the path of Dark images: ')
+x_f = input('Enter the path of Flat-field images: ')
+x_s = input('Enter the path of Science images: ')
+it_s = input('Enter the Science Image file type: ')
+#"""
 
 path_b = Path(x_b)
 path_d = Path(x_d)
@@ -63,9 +72,9 @@ if files_b is not None:
 	files_b_cali = files_b.files_filtered(imagetyp = 'bias', include_path = True)
 	combined_bias = ccdp.combine(files_b_cali, method='average', sigma_clip=True, sigma_clip_low_thresh=5, sigma_clip_high_thresh=5, sigma_clip_func=np.ma.median, sigma_clip_dev_func=mad_std, mem_limit=350e6)
 	combined_bias.meta['combined'] = True
-	combined_bias.write(cali_bias_path / 'master_bias.fit')
+	combined_bias.write(cali_bias_path / 'master_bias.fits')
 	# Reading master bias
-	master_bias = CCDData.read(cali_bias_path.files_filtered(imagetyp = 'bias', combined = True, include_path = True)[0])
+	master_bias = CCDData.read(cali_bias_path / 'master_bias.fits')
 else:
 	master_bias = None
 
@@ -96,7 +105,7 @@ for exposure in sorted(dark_times):
 	cali_darks = red_dark.files_filtered(imagetyp = 'dark', exptime = exposure, include_path = True)
 	combined_dark = ccdp.combine(cali_darks, method='average', sigma_clip=True, sigma_clip_low_thresh=5, sigma_clip_high_thresh=5, sigma_clip_func=np.ma.median, sigma_clip_dev_func=mad_std, mem_limit=350e6)
 	combined_dark.meta['combined'] = True
-	com_dark_name = 'combined_dark_{:6.3f}.fit'.format(exposure)
+	com_dark_name = 'combined_dark_{:6.3f}.fits'.format(exposure)
 	combined_dark.write(cali_dark_path / com_dark_name)
 # Reading master dark of various exposure times
 red_dark = ccdp.ImageFileCollection(cali_dark_path)
@@ -134,10 +143,10 @@ red_flats = ccdp.ImageFileCollection(cali_flat_path)
 cali_flats = red_flats.files_filtered(imagetyp = 'FLAT', include_path = True)
 combined_flat = ccdp.combine(cali_flats, method='average', scale = utl.inverse_median, sigma_clip=True, sigma_clip_low_thresh=5, sigma_clip_high_thresh=5, sigma_clip_func=np.ma.median, sigma_clip_dev_func=mad_std, mem_limit=350e6)
 combined_flat.meta['combined'] = True
-combined_flat.write(cali_flat_path / 'master_flat.fit')
+combined_flat.write(cali_flat_path / 'master_flat.fits')
 # Reading master flat
 red_flats = ccdp.ImageFileCollection(cali_flat_path)
-combined_flat = {ccd.header['imagetyp'] : ccd for ccd in red_flats.ccds(imagetyp = 'FLAT', combined = True)}
+combined_flat = CCDData.read(cali_flat_path / 'master_flat.fits')#{ccd.header['imagetyp'] : ccd for ccd in red_flats.ccds(imagetyp = 'FLAT', combined = True)}
 
 
 #--------------------------------
@@ -145,8 +154,8 @@ combined_flat = {ccd.header['imagetyp'] : ccd for ccd in red_flats.ccds(imagetyp
 #--------------------------------
 cali_science_path = Path(path_s / 'cali_science')
 cali_science_path.mkdir(exist_ok = True)
-files_s_cali = files_s.files_filtered(imagetyp = 'object', include_path = True)
-for ccd, file_name in files_s.ccds(imagetyp = 'object', ccd_kwargs = {'unit' : 'adu'}, return_fname = True):
+files_s_cali = files_s.files_filtered(imagetyp = it_s, include_path = True)
+for ccd, file_name in files_s.ccds(imagetyp = it_s, ccd_kwargs = {'unit' : 'adu'}, return_fname = True):
 	# Subtract bias
 	if master_bias is not None:
 		ccd = ccdp.subtract_bias(ccd, master_bias)
@@ -157,11 +166,11 @@ for ccd, file_name in files_s.ccds(imagetyp = 'object', ccd_kwargs = {'unit' : '
 		closest_dark1 = utl.find_nearest_dark_exposure(ccd, dark_times, tolerance = 1000)
 		# Subtract scaled Dark
 		ccd = ccdp.subtract_dark(ccd, combined_darks[closest_dark1], exposure_time = 'exptime', exposure_unit = u.second, scale = True)
-		ccd = ccdp.flat_correct(ccd, combined_flat['FLAT'])
+		ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
 		ccd.write(cali_science_path / file_name)
 	else:
 		closest_dark2 = utl.find_nearest_dark_exposure(ccd, dark_times)
 		# Subtracting Darks
 		ccd = ccdp.subtract_dark(ccd, combined_darks[closest_dark2], exposure_time = 'exptime', exposure_unit = u.second)
-		ccd = ccdp.flat_correct(ccd, combined_flat['FLAT'])
+		ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
 		ccd.write(cali_science_path / file_name)
