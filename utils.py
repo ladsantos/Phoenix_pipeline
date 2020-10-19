@@ -37,7 +37,7 @@ def show_image(image,
     elif fig is None and ax is None:
         if figsize is not None:
             # Rescale the fig size to match the image dimensions, roughly
-            image_aspect_ratio = image.shape[0] / image.shape[1]
+            image_aspect_ratio = image.shape[1] / image.shape[0]
             figsize = (max(figsize) * image_aspect_ratio, max(figsize))
 
         fig, ax = plt.subplots(1, 1, figsize=figsize)
@@ -106,6 +106,7 @@ def show_image(image,
 
     if not show_ticks:
         ax.tick_params(labelbottom=False, labelleft=False, labelright=False, labeltop=False)
+    fig.savefig('Image.png')
 
 
 
