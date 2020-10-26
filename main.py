@@ -14,12 +14,12 @@ import shutil
 #-------Loading data files----------
 #
 #-----------------------------------
-"""
+#"""
 x_b = ''
-x_d = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/dark/'
-x_f = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/flat/'
-#x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/telluric_standard/'
-x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/WASP-7/'
+x_d = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/30_Oct_2009/dark/'
+x_f = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/30_Oct_2009/flat/'
+#x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/30_Oct_2009/telluric_standard/'
+x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/30_Oct_2009/WASP-7/'
 it_s = 'object'
 """
 x_b = input('Enter the path of Bias images, if there are none then press Enter: ')
@@ -27,7 +27,7 @@ x_d = input('Enter the path of Dark images: ')
 x_f = input('Enter the path of Flat-field images: ')
 x_s = input('Enter the path of Science images: ')
 it_s = input('Enter the Science Image file type: ')
-#"""
+"""
 
 path_b = Path(x_b)
 path_d = Path(x_d)
@@ -166,25 +166,25 @@ for i in range(len(files_spec)):
 
 
 # Sky subtracting images
-cali_science_path1 = Path(path_s / 'sky_subtracted_science')
-cali_science_path1.mkdir(exist_ok = True)
 j = 0
-for i in range(int(len(files_spec_list))/2):
-	ccd1 = CCDData.read(files_spec_list[j], unit='adu')
-	ccd2 = CCDData.read(files_spec_list[j+1], unit = 'adu')
+for i in range(int(len(files_spec_list)/2)):
+	ccd1 = CCDData.read(x_s + files_spec_list[j], unit='adu')
+	ccd2 = CCDData.read(x_s + files_spec_list[j+1], unit = 'adu')
 	sky_sub1 = ccd1.data - ccd2.data
 	ss1 = CCDData(sky_sub1, unit='adu')
 	ss1.header = ccd1.header
 	ss1.meta['sky_sub'] = True
-	ss1.write(cali_science_path / 'sky_sub_' + files_spec_list[j] + '_.fits')
+	ss1_name = 'sky_sub_' + files_spec_list[j] + '.fits'
+	ss1.write(cali_science_path / ss1_name)
 	sky_sub2 = ccd2.data - ccd1.data
 	ss2 = CCDData(sky_sub2, unit='adu')
 	ss2.header = ccd2.header
 	ss2.meta['sky_sub'] = True
-	ss2.write(cali_science_path1 / 'sky_sub_' + files_spec_list[j+1] + '_.fits')
+	ss2_name = 'sky_sub_' + files_spec_list[j+1] + '.fits'
+	ss2.write(cali_science_path / ss2_name)
 	j = j+2
 
-files_s1 = ccdp.ImageFileCollection(cali_science_path1)
+files_s1 = ccdp.ImageFileCollection(cali_science_path)
 final_calibrated = Path(path_s / 'Final_calibrated_science')
 final_calibrated.mkdir(exist_ok = True)
 
