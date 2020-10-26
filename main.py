@@ -14,12 +14,12 @@ import shutil
 #-------Loading data files----------
 #
 #-----------------------------------
-"""
+#"""
 x_b = ''
-x_d = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/dark/'
-x_f = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/flat/'
-#x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/telluric_standard/'
-x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/20_Nov_2009/WASP-7/'
+x_d = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/30_Oct_2009/dark/'
+x_f = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/30_Oct_2009/flat/'
+#x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/30_Oct_2009/telluric_standard/'
+x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/30_Oct_2009/WASP-7/'
 it_s = 'object'
 """
 x_b = input('Enter the path of Bias images, if there are none then press Enter: ')
@@ -27,7 +27,7 @@ x_d = input('Enter the path of Dark images: ')
 x_f = input('Enter the path of Flat-field images: ')
 x_s = input('Enter the path of Science images: ')
 it_s = input('Enter the Science Image file type: ')
-#"""
+"""
 
 path_b = Path(x_b)
 path_d = Path(x_d)
@@ -164,40 +164,43 @@ for i in range(len(files_spec)):
 	if xxx[0:4] == 'open':
 		files_spec_list = np.hstack((files_spec_list, files_spec['file'][i]))
 
+
 # Sky subtracting images
 j = 0
-for i in range(int(len(files_spec_list))/2):
-	ccd1 = CCDData.read(files_spec_list[j], unit='adu')
-	ccd2 = CCDData.read(files_spec_list[j+1], unit = 'adu')
+for i in range(int(len(files_spec_list)/2)):
+	ccd1 = CCDData.read(x_s + files_spec_list[j], unit='adu')
+	ccd2 = CCDData.read(x_s + files_spec_list[j+1], unit = 'adu')
 	sky_sub1 = ccd1.data - ccd2.data
+	sky_sub1[sky_sub1 < 0] = 0
 	ss1 = CCDData(sky_sub1, unit='adu')
 	ss1.header = ccd1.header
 	ss1.meta['sky_sub'] = True
-	ss1.write(cali_science_path / 'sky_sub_' + files_spec_list[j] + '_.fits')
+	ss1_name = 'sky_sub_' + files_spec_list[j] + '.fits'
+	ss1.write(cali_science_path / ss1_name)
 	sky_sub2 = ccd2.data - ccd1.data
+	sky_sub2[sky_sub2 < 0] = 0
 	ss2 = CCDData(sky_sub2, unit='adu')
 	ss2.header = ccd2.header
 	ss2.meta['sky_sub'] = True
-	ss2.write(cali_science_path / 'sky_sub_' + files_spec_list[j+1] + '_.fits')
+	ss2_name = 'sky_sub_' + files_spec_list[j+1] + '.fits'
+	ss2.write(cali_science_path / ss2_name)
 	j = j+2
 
+files_s1 = ccdp.ImageFileCollection(cali_science_path)
+final_calibrated = Path(path_s / 'Final_calibrated_science')
+final_calibrated.mkdir(exist_ok = True)
+
 # Correcting for flat
-for ccd, file_name in files_s.ccds(imagetyp = it_s, ccd_kwargs = {'unit' : 'adu'}, return_fname = True):
-	# Subtract bias
-	if master_bias is not None:
-		ccd = ccdp.subtract_bias(ccd, master_bias)
-	else:
-		ccd = ccd
-	closest_dark = utl.find_nearest_dark_exposure(ccd, dark_times)
-	if closest_dark is None:
-		closest_dark1 = utl.find_nearest_dark_exposure(ccd, dark_times, tolerance = 1000)
-		# Subtract scaled Dark
-		ccd = ccdp.subtract_dark(ccd, combined_darks[closest_dark1], exposure_time = 'exptime', exposure_unit = u.second, scale = True)
-		ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
-		ccd.write(cali_science_path / file_name)
+for ccd, file_name in files_s1.ccds(imagetyp = it_s, ccd_kwargs = {'unit' : 'adu'}, return_fname = True):
+	# Subtract scaled Dark
+	#ccd = ccdp.subtract_dark(ccd, combined_darks[closest_dark1], exposure_time = 'exptime', exposure_unit = u.second, scale = True)
+	ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
+	ccd.write(final_calibrated / file_name)
+"""
 	else:
 		closest_dark2 = utl.find_nearest_dark_exposure(ccd, dark_times)
 		# Subtracting Darks
 		ccd = ccdp.subtract_dark(ccd, combined_darks[closest_dark2], exposure_time = 'exptime', exposure_unit = u.second)
 		ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
-		ccd.write(cali_science_path / file_name)
+		ccd.write(final_calibrated / file_name)
+"""
