@@ -171,7 +171,7 @@ for i in range(int(len(files_spec_list)/2)):
 	ccd1 = CCDData.read(x_s + files_spec_list[j], unit='adu')
 	ccd2 = CCDData.read(x_s + files_spec_list[j+1], unit = 'adu')
 	sky_sub1 = ccd1.data - ccd2.data
-	sky_sub1[sky_sub1 < 0] =
+	sky_sub1[sky_sub1 < 0] = 0
 	ss1 = CCDData(sky_sub1, unit='adu')
 	ss1.header = ccd1.header
 	ss1.meta['sky_sub'] = True
