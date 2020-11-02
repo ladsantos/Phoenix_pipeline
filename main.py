@@ -174,13 +174,13 @@ for i in range(int(len(files_spec_list)/2)):
 	ss1 = CCDData(sky_sub1, unit='adu')
 	ss1.header = ccd1.header
 	ss1.meta['sky_sub'] = True
-	name1 = 'sky_sub_' + files_spec_list[j] + '.fits'
+	name1 = 'sky_sub_' + files_spec_list[j]
 	ss1.write(cali_science_path1 / name1)
 	sky_sub2 = ccd2.data - ccd1.data
 	ss2 = CCDData(sky_sub2, unit='adu')
 	ss2.header = ccd2.header
 	ss2.meta['sky_sub'] = True
-	name2 = 'sky_sub_' + files_spec_list[j+1] + '.fits'
+	name2 = 'sky_sub_' + files_spec_list[j+1]
 	ss2.write(cali_science_path1 / name2)
 	j = j+2
 
