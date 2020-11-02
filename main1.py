@@ -19,7 +19,11 @@ trimmed.header = ccd.header
 trimmed.write(file_name + '_trim.fits')
 
 # Reading the data from Trimmed image
-data = trimmed.data
+data1 = trimmed.data
+# Cutting the intial and last 50 columns from the data
+data2 = np.transpose(data1)
+data3 = data2[50:190]
+data = np.transpose(data3)
 
 # Detecting a line where spectrum could reside
 ys = np.array([100, 200, 700, 800])
