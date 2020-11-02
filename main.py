@@ -153,53 +153,53 @@ combined_flat = CCDData.read(cali_flat_path / 'master_flat.fits')#{ccd.header['i
 #--------------------------------
 #---Calibrating Science Images---
 #--------------------------------
-cali_science_path = Path(path_s / 'cali_science')
-cali_science_path.mkdir(exist_ok = True)
 
-# Correcting for flat
-for ccd, file_name in files_s.ccds(imagetyp = it_s, ccd_kwargs = {'unit' : 'adu'}, return_fname = True):
-	# Subtract scaled Dark
-	#ccd = ccdp.subtract_dark(ccd, combined_darks[closest_dark1], exposure_time = 'exptime', exposure_unit = u.second, scale = True)
-	ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
-	ccd.write(cali_science_path / file_name)
-"""
-	else:
-		closest_dark2 = utl.find_nearest_dark_exposure(ccd, dark_times)
-		# Subtracting Darks
-		ccd = ccdp.subtract_dark(ccd, combined_darks[closest_dark2], exposure_time = 'exptime', exposure_unit = u.second)
-		ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
-		ccd.write(final_calibrated / file_name)
-"""
-files_s1 = ccdp.ImageFileCollection(cali_science_path)
-files_s_cali = files_s1.files_filtered(imagetyp = it_s, include_path = True)
 # Creating a list of spectrum images
-files_spec = files_s1.summary['file', 'view_pos']
+files_spec = files_s.summary['file', 'view_pos']
 files_spec_list = np.array([])
 for i in range(len(files_spec)):
 	xxx = files_spec['view_pos'][i]
 	if xxx[0:4] == 'open':
 		files_spec_list = np.hstack((files_spec_list, files_spec['file'][i]))
 
-final_calibrated = Path(path_s / 'Final_calibrated_science')
-final_calibrated.mkdir(exist_ok = True)
 
 # Sky subtracting images
+cali_science_path1 = Path(path_s / 'Sky_subtracted_science')
+cali_science_path1.mkdir(exist_ok = True)
 j = 0
 for i in range(int(len(files_spec_list)/2)):
-	ccd1 = CCDData.read(x_s + 'cali_science/' + files_spec_list[j], unit='adu')
-	ccd2 = CCDData.read(x_s + 'cali_science/' + files_spec_list[j+1], unit = 'adu')
+	ccd1 = CCDData.read(x_s + files_spec_list[j], unit='adu')
+	ccd2 = CCDData.read(x_s + files_spec_list[j+1], unit = 'adu')
 	sky_sub1 = ccd1.data - ccd2.data
-	sky_sub1[sky_sub1 < 0] = 0
 	ss1 = CCDData(sky_sub1, unit='adu')
 	ss1.header = ccd1.header
 	ss1.meta['sky_sub'] = True
-	ss1_name = 'sky_sub_' + files_spec_list[j]
-	ss1.write(final_calibrated / ss1_name)
+	name1 = 'sky_sub_' + files_spec_list[j] + '.fits'
+	ss1.write(cali_science_path1 / name1)
 	sky_sub2 = ccd2.data - ccd1.data
-	sky_sub2[sky_sub2 < 0] = 0
 	ss2 = CCDData(sky_sub2, unit='adu')
 	ss2.header = ccd2.header
 	ss2.meta['sky_sub'] = True
-	ss2_name = 'sky_sub_' + files_spec_list[j+1]
-	ss2.write(final_calibrated / ss2_name)
+	name2 = 'sky_sub_' + files_spec_list[j+1] + '.fits'
+	ss2.write(cali_science_path1 / name2)
 	j = j+2
+
+files_s1 = ccdp.ImageFileCollection(cali_science_path1)
+final_calibrated = Path(path_s / 'Final_calibrated_science')
+final_calibrated.mkdir(exist_ok = True)
+
+# Correcting for flat
+for ccd, file_name in files_s1.ccds(imagetyp = it_s, ccd_kwargs = {'unit' : 'adu'}, return_fname = True):
+	# Subtract scaled Dark
+	#ccd = ccdp.subtract_dark(ccd, combined_darks[closest_dark1], exposure_time = 'exptime', exposure_unit = u.second, scale = True)
+	ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
+	ccd.write(final_calibrated / file_name)
+"""
+	else:
+		closest_dark2 = utl.find_nearest_dark_exposure(ccd, dark_times)
+		# Subtracting Darks
+		ccd = ccdp.subtract_dark(ccd, combined_darks[closest_dark2], exposure_time = 'exptime', exposure_unit = u.second)
+		ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
+		ccd.write(cali_science_path / file_name)
+		ccd.write(final_calibrated / file_name)
+"""
