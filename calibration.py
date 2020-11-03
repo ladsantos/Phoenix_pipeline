@@ -221,12 +221,3 @@ def calibrate_images(x_b = '', x_d, x_f, x_s, it_s = 'object'):
 		# Subtract scaled Dark
 		ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
 		ccd.write(final_calibrated / file_name)
-	"""
-		else:
-			closest_dark2 = utl.find_nearest_dark_exposure(ccd, dark_times)
-			# Subtracting Darks
-			ccd = ccdp.subtract_dark(ccd, combined_darks[closest_dark2], exposure_time = 'exptime', exposure_unit = u.second)
-			ccd = ccdp.flat_correct(ccd, combined_flat)#['FLAT'])
-			ccd.write(cali_science_path / file_name)
-			ccd.write(final_calibrated / file_name)
-	"""
