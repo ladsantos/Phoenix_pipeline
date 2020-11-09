@@ -15,7 +15,7 @@ import shutil
 #
 #-----------------------------------
 
-def calibrate_images(x_b = '', x_d, x_f, x_s, it_s = 'object'):
+def calibrate_images(x_d, x_f, x_s, it_s = 'object', x_b = '', ):
 	"""
 	Parameters
 	----------

@@ -7,7 +7,7 @@ import matplotlib.colors as clr
 from scipy.optimize import curve_fit as cft
 
 
-def flux_extraction(file_name, path, out_path):
+def flux_extraction(file_name, path, out_path, images=True):
 	"""
 	Parameters
 	----------
@@ -18,7 +18,11 @@ def flux_extraction(file_name, path, out_path):
 	path : str
 			Path of the desired image file
 	out_path : str
-			Path of the output data file
+			Path of the output data and/or image file
+	images : bool
+			True if one wants to save visualization of flux data
+			False if not.
+			Default is True
 	----------
 	returns
 	----------
@@ -31,7 +35,7 @@ def flux_extraction(file_name, path, out_path):
 	"""
 	pt = Path(path)
 	f1 = ccdp.ImageFileCollection(pt)
-	ccd = CCDData.read(file_name + '.fits')
+	ccd = CCDData.read(path + file_name)# + '.fits')
 	
 	# Trimming the Image
 	trimmed = ccdp.trim_image(ccd, fits_section = '[1:256, 100:1000]')
@@ -121,7 +125,7 @@ def flux_extraction(file_name, path, out_path):
 		ran_l = inv_line(ys[i], popt_l[0], popt_l[1])
 		ran_r = inv_line(ys[i], popt_r[0], popt_r[1])
 		xd1 = data[ys[i]]
-		xd = xd1[int(ran_l):int(ran_u)]
+		xd = xd1[int(ran_l):int(ran_r)]
 		ma = np.max(xd)
 		ab = np.where(xd == ma)
 		xs_mid = np.hstack((xs_mid, ab[0][0] + ran_l))
@@ -146,9 +150,20 @@ def flux_extraction(file_name, path, out_path):
 	for i in range(len(y11)):
 		f11 = total_flux(y11[i])
 		flux = np.hstack((flux, f11))
+
+	# Saving the image file for flux
+	if images == True:
+		fig1 = plt.figure(figsize = (20,10))
+		plt.plot(flux)
+		plt.xlabel('Pixel Number')
+		plt.ylabel('Total Flux')
+		plt.title('Total flux for ' + file_name + ' observation')
+		plt.grid()
+		plt.savefig(out_path + '/' + file_name + '_flux.png')
+		plt.close(fig1)
 	
 	# Saving Data file of the flux
-	f1 = file(out_path + '/' + file_name + '_flux.dat', 'w')
+	f1 = open(out_path + '/' + file_name + '_flux.dat', 'w')
 	f1.write('#Pixel\t\tFlux\n')
 	for i in range(len(y11)):
 		f1.write(str(y11[i]) + '\t\t' + str(flux[i]) + '\n')
