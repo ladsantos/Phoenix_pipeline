@@ -164,9 +164,9 @@ def flux_extraction(file_name, file_err_name, path, path_err, out_path, images=T
 		xlow = xmid - xlim
 		xup = xmid + xlim
 		p2 = ydata[int(xlow):int(xup)]
-		p1 = p2/np.sum(p2)
+		p1 = p2/np.sum(np.abs(p2))
 		xdata = np.arange(1, len(p1)+1, 1)
-		poptg, pcovg = cft(gaus, xdata, p1)
+		poptg, pcovg = cft(gaus, xdata=xdata, ydata=p1, p0=[25,1])
 		fwhm = np.sqrt(poptg[1]*poptg[1]*np.log(256))
 		mu1 = poptg[0] + inv_line(lam, *popt_m) - xlim
 		return mu1, poptg[1], fwhm
