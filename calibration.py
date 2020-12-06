@@ -207,6 +207,10 @@ def calibrate_images(x_d, x_f, x_s, it_s = 'object', x_b = '', ):
 	final_calibrated = Path(path_s / 'Final_calibrated_science')	
 	final_calibrated.mkdir(exist_ok = True)
 	
+	# Variance in sky subtracting images
+	final_calibrated_err = Path(path_s / 'Error_final_calibrated_science')	
+	final_calibrated_err.mkdir(exist_ok = True)
+
 	j = 0
 	for i in range(int(len(files_spec_list)/2)):
 		# For Reduced Image
@@ -238,8 +242,8 @@ def calibrate_images(x_d, x_f, x_s, it_s = 'object', x_b = '', ):
 		data_err1.meta['Error'] = True
 		data_err1.header = ccd1.header
 		
-		name3 = 'sky_sub_err' + files_spec_list[j]
-		data_err1.write(final_calibrated / name3)
-		name4 = 'sky_sub_err' + files_spec_list[j+1]
-		data_err1.write(final_calibrated / name4)
+		name3 = 'sky_sub_err_' + files_spec_list[j]
+		data_err1.write(final_calibrated_err / name3)
+		name4 = 'sky_sub_err_' + files_spec_list[j+1]
+		data_err1.write(final_calibrated_err / name4)
 		j = j+2
