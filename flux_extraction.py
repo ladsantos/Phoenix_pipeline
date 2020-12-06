@@ -7,7 +7,7 @@ import matplotlib.colors as clr
 from scipy.optimize import curve_fit as cft
 
 
-def flux_extraction(file_name, path, out_path, images=True):
+def flux_extraction(file_name, file_err_name, path, out_path, images=True):
 	"""
 	Parameters
 	----------
@@ -15,8 +15,11 @@ def flux_extraction(file_name, path, out_path, images=True):
 	file_name : str
 			Name of the image/telluric file
 			from which flux has to be extracted
+	file_err_name: str
+			Name of the image/telluric variance file
 	path : str
-			Path of the desired image file
+			Path of the desired image file and its error file
+			Image and its Variance file should be in same folder
 	out_path : str
 			Path of the output data and/or image file
 	images : bool
@@ -33,8 +36,7 @@ def flux_extraction(file_name, path, out_path, images=True):
 			that of image file.
 	----------
 	"""
-	pt = Path(path)
-	f1 = ccdp.ImageFileCollection(pt)
+	# Reading Data File
 	ccd = CCDData.read(path + file_name)# + '.fits')
 	
 	# Trimming the Image
@@ -46,6 +48,17 @@ def flux_extraction(file_name, path, out_path, images=True):
 	# Reading the data from Trimmed image
 	data = trimmed.data
 	
+	# Reading Variance File
+	ccd_err = CCDData.read(path + file_err_name)# + '.fits')
+	
+	# Trimming the Image
+	trimmed_err = ccdp.trim_image(ccd_err, fits_section = '[1:256, 100:1000]')
+	trimmed_err.meta['TRIM'] = True
+	trimmed_err.header = ccd.header
+	#trimmed.write(file_name + '_trim.fits')
+	
+	# Reading the data from Trimmed image
+	data_err = trimmed_err.data
 	# Creating a function to detect the edges of slit
 	# For lower edge
 	def xlow(raw_data):
@@ -98,6 +111,10 @@ def flux_extraction(file_name, path, out_path, images=True):
 			j = j - 5
 		return xup
 	
+	# Creating xdata and ydata in range of ccd
+	xall = np.arange(0,256,1)
+	yall = np.arange(0, 901, 1)
+	
 	# Defining line and inverse line
 	def line(x, m, c):
 		return m*x + c
@@ -131,24 +148,82 @@ def flux_extraction(file_name, path, out_path, images=True):
 		xs_mid = np.hstack((xs_mid, ab[0][0] + ran_l))
 	
 	popt_m, pcov_m = cft(line, xs_mid, ys)
+
+	# Defining a Gaussian to create Spatial Image
+	def gaus(x, mu, sigma):
+		a1 = np.sqrt(2*np.pi*sigma*sigma)**-1
+		a2 = np.exp(-0.5*((x-mu)/sigma)**2)
+		return a1*a2
 	
-	# Finding total flux
-	def total_flux(lam, xlim=20):
-		ydata = data[lam]
+	# Finding spatial profile
+	def spatial(data1, data1_err, lam, xlim=25):
+		ydata = data1[lam]
 		xmid = inv_line(lam, popt_m[0], popt_m[1])
 		xlow = xmid - xlim
 		xup = xmid + xlim
-		total_flux1 = 0
-		xdata = np.arange(int(xlow), int(xup+1), 1)
-		for i in range(len(xdata)):
-			total_flux1 = total_flux1 + ydata[xdata[i]]
-		return total_flux1
+		p2 = ydata[int(xlow):int(xup)]
+		p1 = p2/np.sum(p2)
+		xdata = np.arange(1, len(p1)+1, 1)
+		poptg, pcovg = cft(gaus, xdata, p1)
+		fwhm = np.sqrt(poptg[1]*poptg[1]*np.log(256))
+		mu1 = poptg[0] + inv_line(lam, *popt_m) - xlim
+		return mu1, poptg[1], fwhm
+	
+	# Finding total flux
+	def total_flux(data1, data1_err, lam):
+		ydata = data1[lam]
+		ydata_err = data1_err[lam]
+		mu1, sig1, fm1 = spatial(data1, data1_err, lam)
+		p_x = gaus(xall, mu1, sig1)
+		a1 = 0
+		a2 = 0
+		for i in range(len(xall)):
+			a11 = p_x[i]*ydata[i]/ydata_err[i]
+			a1 = a1 + a11
+			a22 = p_x[i]*p_x[i]/ydata_err[i]
+			a2 = a2 + a22
+		fopt = a1/a2
+		var = 1/a2
+		return fopt, var
+
+	# Cosmic Rays Removal
+	def cosmic_ray(data1, data1_err, lam, threshold=16):
+		fopt, var = total_flux(data1, data1_err, lam)
+		d_s = data1[lam]
+		d_s_err = data1_err[lam]
+		mu2, sig2, fm2 = spatial(data1, data1_err, lam)
+		p_x = gaus(xall, mu2, sig2)
+		data_wo_cr = np.array([])
+		data_wo_cr_err = np.array([])
+		for i in range(len(xall)):
+			xx = (d_s[i] - fopt*p_x[i])**2
+			yy = xx/d_s_err[i]
+			if yy>threshold:
+				if i == len(xall)-1:
+					xxx = data1[lam][i-1]
+				else:
+					xxx = (data1[lam][i-1] + data1[lam][i+1])/2
+				data_wo_cr = np.hstack((data_wo_cr, xxx))
+				data_wo_cr_err = np.hstack((data_wo_cr_err, 1))
+			else:
+				data_wo_cr = np.hstack((data_wo_cr, data1[lam][i]))
+				data_wo_cr_err = np.hstack((data_wo_cr_err, data1_err[lam][i]))
+		return data_wo_cr, data_wo_cr_err
+
+	# Data Without Cosmic Rays
+	final_data = np.array([])
+	final_data_err = np.array([])
+	final_data, final_data_err = cosmic_ray(data, data_err, yall[0], threshold=10)
+	
+	for i in range(len(yall)-1):
+		fda, fdae = cosmic_ray(data, data_err, yall[i+1])
+		final_data = np.vstack((final_data, fda))
+		final_data_err = np.vstack((final_data_err, fdae))
 	
 	# Flux as a function of pixel
 	flux = np.array([])
-	y11 = np.arange(0, 900, 1)
-	for i in range(len(y11)):
-		f11 = total_flux(y11[i])
+	for i in range(len(yall)):
+		f11 = total_flux(yall[i])
 		flux = np.hstack((flux, f11))
 
 	# Saving the image file for flux
