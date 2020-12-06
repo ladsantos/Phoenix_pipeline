@@ -207,10 +207,15 @@ def calibrate_images(x_d, x_f, x_s, it_s = 'object', x_b = '', ):
 	final_calibrated = Path(path_s / 'Final_calibrated_science')	
 	final_calibrated.mkdir(exist_ok = True)
 	
+	# Variance in sky subtracting images
+	final_calibrated_err = Path(path_s / 'Error_final_calibrated_science')	
+	final_calibrated_err.mkdir(exist_ok = True)
+
 	j = 0
 	for i in range(int(len(files_spec_list)/2)):
+		# For Reduced Image
 		ccd1 = CCDData.read(x_s + 'cali_science/' + files_spec_list[j], unit='adu')
-		ccd2 = CCDData.read(x_s + 'cali_science/' +files_spec_list[j+1], unit = 'adu')
+		ccd2 = CCDData.read(x_s + 'cali_science/' + files_spec_list[j+1], unit = 'adu')
 		sky_sub1 = ccd1.data - ccd2.data
 		ss1 = CCDData(sky_sub1, unit='adu')
 		ss1.header = ccd1.header
@@ -223,4 +228,22 @@ def calibrate_images(x_d, x_f, x_s, it_s = 'object', x_b = '', ):
 		ss2.meta['sky_sub'] = True
 		name2 = 'sky_sub_' + files_spec_list[j+1]
 		ss2.write(final_calibrated / name2)
+		# For Errors in Reduced Image
+		ccd1e = ccdp.create_deviation(ccd1, gain=9.2*u.electron/u.adu, readnoise=40*u.electron)
+		ccd1er = ccd1e.uncertainty.array
+		ccd1err = np.nan_to_num(ccd1er)
+
+		ccd2e = ccdp.create_deviation(ccd2, gain=9.2*u.electron/u.adu, readnoise=40*u.electron)
+		ccd2er = ccd2e.uncertainty.array
+		ccd2err = np.nan_to_num(ccd2er)
+
+		data_err = np.sqrt(ccd1err**2 + ccd2err**2 - (2*ccd1err*ccd2err))
+		data_err1 = CCDData(data_err, unit='adu')
+		data_err1.meta['Error'] = True
+		data_err1.header = ccd1.header
+		
+		name3 = 'sky_sub_err_' + files_spec_list[j]
+		data_err1.write(final_calibrated_err / name3)
+		name4 = 'sky_sub_err_' + files_spec_list[j+1]
+		data_err1.write(final_calibrated_err / name4)
 		j = j+2

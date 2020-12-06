@@ -7,7 +7,7 @@ import matplotlib.colors as clr
 from scipy.optimize import curve_fit as cft
 
 
-def flux_extraction(file_name, file_err_name, path, out_path, images=True):
+def flux_extraction(file_name, file_err_name, path, path_err, out_path, images=True):
 	"""
 	Parameters
 	----------
@@ -18,8 +18,9 @@ def flux_extraction(file_name, file_err_name, path, out_path, images=True):
 	file_err_name: str
 			Name of the image/telluric variance file
 	path : str
-			Path of the desired image file and its error file
-			Image and its Variance file should be in same folder
+			Path of the desired image file
+	path_err : str
+			Path of the variance of desired image file
 	out_path : str
 			Path of the output data and/or image file
 	images : bool
@@ -49,7 +50,7 @@ def flux_extraction(file_name, file_err_name, path, out_path, images=True):
 	data = trimmed.data
 	
 	# Reading Variance File
-	ccd_err = CCDData.read(path + file_err_name)# + '.fits')
+	ccd_err = CCDData.read(path_err + file_err_name)# + '.fits')
 	
 	# Trimming the Image
 	trimmed_err = ccdp.trim_image(ccd_err, fits_section = '[1:256, 100:1000]')
@@ -59,6 +60,7 @@ def flux_extraction(file_name, file_err_name, path, out_path, images=True):
 	
 	# Reading the data from Trimmed image
 	data_err = trimmed_err.data
+	data_err[data_err == 0] = 1
 	# Creating a function to detect the edges of slit
 	# For lower edge
 	def xlow(raw_data):
@@ -222,14 +224,16 @@ def flux_extraction(file_name, file_err_name, path, out_path, images=True):
 	
 	# Flux as a function of pixel
 	flux = np.array([])
+	flux_err = np.array([])
 	for i in range(len(yall)):
-		f11 = total_flux(yall[i])
+		f11, v11 = total_flux(final_data, final_data_err, yall[i])
 		flux = np.hstack((flux, f11))
+		flux_err = np.hstack((flux_err, v11))
 
 	# Saving the image file for flux
 	if images == True:
 		fig1 = plt.figure(figsize = (20,10))
-		plt.plot(flux)
+		plt.errorbar(yall, flux, yerr=flux_err)
 		plt.xlabel('Pixel Number')
 		plt.ylabel('Total Flux')
 		plt.title('Total flux for ' + file_name + ' observation')
@@ -240,6 +244,6 @@ def flux_extraction(file_name, file_err_name, path, out_path, images=True):
 	# Saving Data file of the flux
 	f1 = open(out_path + '/' + file_name + '_flux.dat', 'w')
 	f1.write('#Pixel\t\tFlux\n')
-	for i in range(len(y11)):
-		f1.write(str(y11[i]) + '\t\t' + str(flux[i]) + '\n')
+	for i in range(len(yall)):
+		f1.write(str(yall[i]) + '\t\t' + str(flux[i]) + '\t' + str(flux_err[i]) + '\n')
 	f1.close()
