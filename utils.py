@@ -4,6 +4,7 @@ from astropy.nddata.utils import block_reduce, Cutout2D
 from matplotlib import pyplot as plt
 import matplotlib.colors as clr
 import os
+import re
 
 def save_image(image, name = 'Image', path = os.getcwd()):
 	"""
@@ -63,3 +64,50 @@ def find_nearest_dark_exposure(image, dark_exposure_times, tolerance=0.5):
 
 def inverse_median(a):
 	return 1/np.median(a)
+
+#------------------------------------------------------------------------------------------
+#-------------------------------Natural Sorting--------------------------------------------
+#------------------------------------------------------------------------------------------
+def atoi(text):
+	return int(text) if text.isdigit() else text
+
+def natural_keys(text):
+	'''
+	alist.sort(key=natural_keys) sorts in human order
+	http://nedbatchelder.com/blog/200712/human_sorting.html
+	(See Toothy's implementation in the comments)
+	'''
+	return [ atoi(c) for c in re.split(r'(\d+)', text) ]
+
+#------------------------------------------------------------------
+#-----------------------Special Maxima-----------------------------
+#------------------------------------------------------------------
+"""
+This function finds a maximum among a dataset which
+is not a Dirac-delta.
+"""
+def special_maxi(x_array):
+	x_ary = x_array
+	yy = np.max(x_ary)
+	abc = np.where(x_ary == yy)
+	if abc[0][0] == 255:
+		cd = x_ary[abc[0][0]-1]
+	else:
+		cd = (x_ary[abc[0][0]-1]+x_ary[abc[0][0]+1])/2
+	if (yy-cd)>5:
+		x_ary[abc[0][0]] = 0
+		yy = np.max(x_ary)
+	return yy, x_ary
+
+def special_maximum(x_array):
+	x_ary = x_array
+	maxi = True
+	while maxi:
+		aaa, xnew = special_maxi(x_ary)
+		aaa1, xnew1 = special_maxi(xnew)
+		if aaa == aaa1:
+			maxi = False
+		else:
+			aaa = aaa1
+			xnew = xnew1
+	return aaa
