@@ -5,6 +5,7 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import matplotlib.colors as clr
 from scipy.optimize import curve_fit as cft
+import utils as utl
 
 
 def flux_extraction(file_name, file_err_name, path, path_err, out_path, images=True):
@@ -139,13 +140,13 @@ def flux_extraction(file_name, file_err_name, path, path_err, out_path, images=T
 	popt_l, pcov_l = cft(line, xs_left, ys)
 	popt_r, pcov_r = cft(line, xs_right, ys)
 
-	# Detecting a line where spectrum could reside
+	# Detecting a line where spectrum should reside
 	for i in range(len(ys)):
 		ran_l = inv_line(ys[i], popt_l[0], popt_l[1])
 		ran_r = inv_line(ys[i], popt_r[0], popt_r[1])
 		xd1 = data[ys[i]]
 		xd = xd1[int(ran_l):int(ran_r)]
-		ma = np.max(xd)
+		ma = utl.special_maximum(xd)
 		ab = np.where(xd == ma)
 		xs_mid = np.hstack((xs_mid, ab[0][0] + ran_l))
 	
