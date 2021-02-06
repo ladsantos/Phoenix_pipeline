@@ -12,7 +12,7 @@ import calibration as cbr
 import flux_extraction as fx
 
 
-obs = np.array(['25_Oct_2009'])
+obs = np.array(['30_Oct_2009'])
 
 for i in range(len(obs)):
 	x_d = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/' + obs[i] + '/dark/'
