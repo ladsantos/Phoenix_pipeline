@@ -26,4 +26,5 @@ def normal(flux_file, degree=1):
     """
     pix, fl, fle = np.loadtxt(flux_file, usecols=(0,1,2), unpack=True)
     sigmas = np.copy(fle)
-    immmvdfmj
+    
+    bb = np.polyfit(pix, fl, sigmas, deg=degree)
