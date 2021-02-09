@@ -247,3 +247,6 @@ def calibrate_images(x_d, x_f, x_s, it_s = 'object', x_b = '', ):
 		name4 = 'sky_sub_err_' + files_spec_list[j+1]
 		data_err1.write(final_calibrated_err / name4)
 		j = j+2
+
+if x=0:
+	print('Hello')
