@@ -25,4 +25,5 @@ def normal(flux_file, degree=1):
         data file containing pixel, normalized flux and error in normalized flux.
     """
     pix, fl, fle = np.loadtxt(flux_file, usecols=(0,1,2), unpack=True)
-    
+    sigmas = np.copy(fle)
+    immmvdfmj
