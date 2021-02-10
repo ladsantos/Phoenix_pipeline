@@ -12,13 +12,15 @@ import calibration as cbr
 import flux_extraction as fx
 
 
-obs = np.array(['20_Oct_2009'])
+obs = np.array(['30_Oct_2009'])
+
+path1 = os.getcwd()
 
 for i in range(len(obs)):
     x_d = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/' + obs[i] + '/dark/'
     x_f = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/' + obs[i] + '/flat/'
-    #x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/' + obs[i] + '/telluric_standard/'
-    x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/' + obs[i] + '/WASP-7/'
+    x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/' + obs[i] + '/telluric_standard/'
+    #x_s = '/home/jayshil/Documents/UNIGE/APL/APL1/WASP-7b_Phoenix/' + obs[i] + '/WASP-7/'
     it_s = 'object'
     cbr.calibrate_images(x_d = x_d, x_f = x_f, x_s = x_s, it_s = it_s)
     p1 = x_s + 'Final_calibrated_science/'
