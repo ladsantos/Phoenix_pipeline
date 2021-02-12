@@ -85,12 +85,3 @@ def normal_spectrum(flux_file, out_path, degree=3):
     for i in range(len(pix)):
         f11.write(str(pix[i]) + '\t' + str(normal_flux[i]) + '\t' + str(normal_flux_err[i]) + '\n')
     f11.close()
-
-pt1 = os.getcwd()
-ff1 = 'sky_sub_2009oct30_0009_fits_flux.dat'
-normal_spectrum(ff1, pt1, degree=3)
-
-pix1, fl1, fle1 = np.loadtxt(pt1 + '/' + 'normal_' + ff1, usecols=(0,1,2), unpack=True)
-plt.errorbar(pix1, fl1, yerr=fle1)
-plt.grid()
-plt.show()
