@@ -9,7 +9,7 @@ import utils as utl
 import astropy.units as u
 import shutil
 
-def normal(flux_file, degree=1):
+def normal(flux_file, degree=3):
     """
     Parameters:
     -----------
@@ -17,7 +17,7 @@ def normal(flux_file, degree=1):
         flux file generated from flux_extraction.py file
     degree : int
         degree of the fitted polynomial
-        default is 1
+        default is 3
     -----------
     returns
     -----------
@@ -28,3 +28,4 @@ def normal(flux_file, degree=1):
     sigmas = np.copy(fle)
     
     bb = np.polyfit(pix, fl, sigmas, deg=degree)
+    
