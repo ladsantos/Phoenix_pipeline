@@ -36,22 +36,25 @@ def normal_spectrum(flux_file, out_path, degree=3):
     fig = plt.figure(figsize=(16, 12))
     ax = fig.add_subplot(211)
 
-    ax.errorbar(pix, fl, yerr=fle, '-')
+    ax.errorbar(pix, fl, yerr=fle)
+    ax.grid()
     #ax.set_ylim(-2, 2)
     ax.set_title('Press left mouse button and drag to select the region of the spectrum you want to mask.')
 
     ax2 = fig.add_subplot(212)
     line2, = ax2.plot(pix, fl, '-')
+    ax2.grid()
 
     def onselect(xmin, xmax):
-        indmin, indmax = np.searchsorted(x, (xmin, xmax))
-        indmax = min(len(x) - 1, indmax)
+        indmin, indmax = np.searchsorted(pix, (xmin, xmax))
+        indmax = min(len(pix) - 1, indmax)
 
-        thisx = x[indmin:indmax]
-        thisy = y[indmin:indmax]
+        thisx = pix[indmin:indmax]
+        thisy = fl[indmin:indmax]
         line2.set_data(thisx, thisy)
         ax2.set_xlim(thisx[0], thisx[-1])
         ax2.set_ylim(thisy.min(), thisy.max())
+        ax2.grid()
         fig.canvas.draw_idle()
         ab = [indmin, indmax]
         selection.append(ab)
@@ -62,26 +65,32 @@ def normal_spectrum(flux_file, out_path, degree=3):
 
     plt.show()
     print(selection)
+    print(selection[0][1])
 
     for i in range(len(selection)):
-        sigmas[int(selection[0]):int(selection[1])] = 0
+        sigmas[int(selection[i][0]):int(selection[i][1])] = 0
     
-    bb = np.polyfit(pix, fl, sigmas, deg=degree)
+    bb = np.polyfit(pix, fl, w=sigmas, deg=degree)
     # Remeber that polyfit gives you an array of the
     # coefficient of the polynomial, starting with the highest degree.
     # while the function in the utilities uses the array
     # starting with a coefficients of lowest degree.
-
+    print(bb)
     coefs = np.flip(bb)
-    polynom = utl.arbi_poly(pix, coefs)
+    polynom = utl.arbi_poly(pix, *coefs)
     normal_flux = fl/polynom
     normal_flux_err = fle/polynom
     flux_file1 = 'normal_' + flux_file
-    f11 = open(out_path, flux_file1, 'w')
+    f11 = open(out_path + '/' + flux_file1, 'w')
     for i in range(len(pix)):
         f11.write(str(pix[i]) + '\t' + str(normal_flux[i]) + '\t' + str(normal_flux_err[i]) + '\n')
     f11.close()
 
 pt1 = os.getcwd()
-ff1 = 'sky_sub_2009oct30_0009.fits_flux.dat'
+ff1 = 'sky_sub_2009oct30_0009_fits_flux.dat'
 normal_spectrum(ff1, pt1, degree=3)
+
+pix1, fl1, fle1 = np.loadtxt(pt1 + '/' + 'normal_' + ff1, usecols=(0,1,2), unpack=True)
+plt.errorbar(pix1, fl1, yerr=fle1)
+plt.grid()
+plt.show()
