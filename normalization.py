@@ -64,8 +64,8 @@ def normal_spectrum(flux_file, out_path, degree=3):
                          rectprops=dict(alpha=0.5, facecolor='red'))
 
     plt.show()
-    print(selection)
-    print(selection[0][1])
+    #print(selection)
+    #print(selection[0][1])
 
     for i in range(len(selection)):
         sigmas[int(selection[i][0]):int(selection[i][1])] = 0
@@ -75,7 +75,7 @@ def normal_spectrum(flux_file, out_path, degree=3):
     # coefficient of the polynomial, starting with the highest degree.
     # while the function in the utilities uses the array
     # starting with a coefficients of lowest degree.
-    print(bb)
+    #print(bb)
     coefs = np.flip(bb)
     polynom = utl.arbi_poly(pix, *coefs)
     normal_flux = fl/polynom
