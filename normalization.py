@@ -41,7 +41,7 @@ def normal_spectrum(loc, flux_file, out_path, degree=3):
     ax.errorbar(pix, fl, yerr=fle)
     ax.grid()
     #ax.set_ylim(-2, 2)
-    ax.set_title('Press left mouse button and drag to select the region of the spectrum you want to mask.')
+    ax.set_title('Press left mouse button and drag to select the region of the spectrum you want to mask. (You can use zoom button to select)')
 
     ax2 = fig.add_subplot(212)
     line2, = ax2.plot(pix, fl, '-')
