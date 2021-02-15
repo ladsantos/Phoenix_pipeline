@@ -10,12 +10,10 @@ import utils as utl
 import astropy.units as u
 import shutil
 
-def normal_spectrum(loc, flux_file, out_path, degree=3):
+def normal_spectrum(flux_file, out_path, degree=3):
     """
     Parameters:
     -----------
-    loc : str
-        location of flux files
     flux_file : .dat file
         flux file generated from flux_extraction.py file
     out_path : str
@@ -29,7 +27,7 @@ def normal_spectrum(loc, flux_file, out_path, degree=3):
     normal_flux : .dat file
         data file containing pixel, normalized flux and error in normalized flux.
     """
-    pix, fl, fle = np.loadtxt(loc + flux_file, usecols=(0,1,2), unpack=True)
+    pix, fl, fle = np.loadtxt(flux_file, usecols=(0,1,2), unpack=True)
     sigmas = np.copy(fle)
     # ---------------------------------------
     # To select the region of spectral lines
@@ -41,7 +39,7 @@ def normal_spectrum(loc, flux_file, out_path, degree=3):
     ax.errorbar(pix, fl, yerr=fle)
     ax.grid()
     #ax.set_ylim(-2, 2)
-    ax.set_title('Press left mouse button and drag to select the region of the spectrum you want to mask. (You can use zoom button to see the minor features)')
+    ax.set_title('Press left mouse button and drag to select the region of the spectrum you want to mask.')
 
     ax2 = fig.add_subplot(212)
     line2, = ax2.plot(pix, fl, '-')

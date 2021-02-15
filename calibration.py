@@ -41,7 +41,9 @@ def calibrate_images(x_d, x_f, x_s, it_s = 'object', x_b = '', ):
     
     #-----Bias
     if x_b == '' and path_b == Path(''):
+        print('                                                                                     ')
         print('Be aware: You did not provide the Bias files; the process will still continue though.')
+        print('                                                                                     ')
         files_b = None
     elif not path_b.is_dir():
         raise RuntimeError('The path you provided for the Bias files does not exist.')
