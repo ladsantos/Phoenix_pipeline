@@ -14,6 +14,8 @@ import normalization as nml
 import cosmic_rays as csr
 from tkinter import filedialog
 from tkinter import *
+import glob
+from astropy.io import fits
 
 root = Tk()
 root.withdraw()
@@ -83,7 +85,16 @@ print('                  ')
 input('Press Enter to choose the directory of Science files...')
 pt_s1 = filedialog.askdirectory(title='Choose Science files directory')
 pt_s = pt_s1 + '/'
-it_s = input('Please enter the type of the Science files (Object/Science): ')
+list3 = glob.glob(pt_s + '*.fits')
+imgtyp = []
+for i in range(len(list3)):
+    hdul = fits.open(list3[i])
+    h1 = hdul[0].header
+    if h1['view_pos'][0:4] == 'open':
+        h22 = h1['imagetyp']
+        imgtyp.append(h22)
+
+it_s = imgtyp[0]
 
 #-------------------------------------------
 #--------- For Output files ----------------
