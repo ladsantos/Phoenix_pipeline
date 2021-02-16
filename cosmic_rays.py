@@ -51,7 +51,7 @@ def cosmic_removal(loc, files, loc_out):
         ff = open(loc_out + 'cosmic_' + files[i], 'w')
         pixx, fll, flle = np.loadtxt(loc + files[i], usecols=(0, 1, 2), unpack=True)
         for j in range(len(fll)):
-            if j != len(fll) or 0 or 1 or len(fll)-1:
+            if j != len(fll)-2 or 0 or 1 or len(fll)-1:
                 if np.abs(fll[j] - master_fl[j]) > 5*flle[j]:
                     fll[j] = (fll[j-1] + fll[j-2] + fll[j+1] + fll[j+2])/4
                     flle[j] = (flle[j-1]**2 + flle[j-2]**2 +
@@ -64,7 +64,7 @@ def cosmic_removal(loc, files, loc_out):
                     flle[j] = flle[2]
                 else:
                     continue
-            elif j == len(fll) or j == len(fll)-1:
+            elif j == len(fll)-2 or j == len(fll)-1:
                 if np.abs(fll[j] - master_fl[j]) > 5*flle[j]:
                     fll[j] = fll[j-2]
                     flle[j] = flle[j-2]
