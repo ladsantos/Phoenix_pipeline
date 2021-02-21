@@ -3,13 +3,14 @@ import matplotlib.pyplot as plt
 from matplotlib.widgets import TextBox
 from matplotlib.widgets import SpanSelector
 from matplotlib.widgets import Button
-
+import os
 
 fig, ax = plt.subplots(figsize=(16, 12))
 fig.subplots_adjust(bottom=0.2)
 
-t = np.arange(0.0, 5.0, 0.01)
-y = np.sin(2*np.pi*t) + 0.5*np.random.randn(len(t))
+pt = os.getcwd()
+
+t, y = np.loadtxt(pt + '/Test/cosmic_normal_sky_sub_2009oct30_0009.fits_flux.dat', usecols=(0,1), unpack=True)
 
 l = ax.plot(t, y, lw=2)
 ax.set_title('Press left mouse button and drag to test')
@@ -49,7 +50,6 @@ span = SpanSelector(ax, onselect, 'horizontal', useblit=True,
 axbox = fig.add_axes([0.2, 0.05, 0.4, 0.075])
 text_box = TextBox(axbox, "Enter the corresponding\n wavelength here (in Angstrom)")
 text_box.on_submit(submit)
-#text_box.set_val("")  # Trigger `submit` with the initial string.
 text_box.stop_typing()
 
 # Enter button
