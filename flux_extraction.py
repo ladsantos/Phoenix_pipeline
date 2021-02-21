@@ -117,13 +117,6 @@ def flux_extraction(file_name, file_err_name, path, path_err, out_path, images=T
     xall = np.arange(0,256,1)
     yall = np.arange(0, 901, 1)
     
-    # Defining line and inverse line
-    def line(x, m, c):
-        return m*x + c
-    def inv_line(x, m, c):
-        bc = (x-c)/m
-        return bc
-    
     # Detecting the edges of the spectrum
     ys = np.array([150, 300, 450, 600, 750])
     xs_left = np.array([])
@@ -136,39 +129,33 @@ def flux_extraction(file_name, file_err_name, path, path_err, out_path, images=T
         xuu = xup(dd1)
         xs_right = np.hstack((xs_right, xuu))
     
-    popt_l, pcov_l = cft(line, xs_left, ys)
-    popt_r, pcov_r = cft(line, xs_right, ys)
+    popt_l, pcov_l = cft(utl.line, xs_left, ys)
+    popt_r, pcov_r = cft(utl.line, xs_right, ys)
 
     # Detecting a line where spectrum should reside
     for i in range(len(ys)):
-        ran_l = inv_line(ys[i], popt_l[0], popt_l[1])
-        ran_r = inv_line(ys[i], popt_r[0], popt_r[1])
+        ran_l = utl.inv_line(ys[i], popt_l[0], popt_l[1])
+        ran_r = utl.inv_line(ys[i], popt_r[0], popt_r[1])
         xd1 = data[ys[i]]
         xd = xd1[int(ran_l):int(ran_r)]
         ma = utl.special_maximum(xd)
         ab = np.where(xd == ma)
         xs_mid = np.hstack((xs_mid, ab[0][0] + ran_l))
     
-    popt_m, pcov_m = cft(line, xs_mid, ys)
-
-    # Defining a Gaussian to create Spatial Image
-    def gaus(x, mu, sigma):
-        a1 = np.sqrt(2*np.pi*sigma*sigma)**-1
-        a2 = np.exp(-0.5*((x-mu)/sigma)**2)
-        return a1*a2
+    popt_m, pcov_m = cft(utl.line, xs_mid, ys)
     
     # Finding spatial profile
     def spatial(data1, data1_err, lam, xlim=25):
         ydata = data1[lam]
-        xmid = inv_line(lam, popt_m[0], popt_m[1])
+        xmid = utl.inv_line(lam, popt_m[0], popt_m[1])
         xlow = xmid - xlim
         xup = xmid + xlim
         p2 = ydata[int(xlow):int(xup)]
         p1 = p2/np.sum(np.abs(p2))
         xdata = np.arange(1, len(p1)+1, 1)
-        poptg, pcovg = cft(gaus, xdata=xdata, ydata=p1, p0=[25,1])
+        poptg, pcovg = cft(utl.gaus, xdata=xdata, ydata=p1, p0=[25,1])
         fwhm = np.sqrt(poptg[1]*poptg[1]*np.log(256))
-        mu1 = poptg[0] + inv_line(lam, *popt_m) - xlim
+        mu1 = poptg[0] + utl.inv_line(lam, *popt_m) - xlim
         return mu1, poptg[1], fwhm
     
     # Finding total flux
@@ -176,7 +163,7 @@ def flux_extraction(file_name, file_err_name, path, path_err, out_path, images=T
         ydata = data1[lam]
         ydata_err = data1_err[lam]
         mu1, sig1, fm1 = spatial(data1, data1_err, lam)
-        p_x = gaus(xall, mu1, sig1)
+        p_x = utl.gaus(xall, mu1, sig1)
         a1 = 0
         a2 = 0
         for i in range(len(xall)):
@@ -194,7 +181,7 @@ def flux_extraction(file_name, file_err_name, path, path_err, out_path, images=T
         d_s = data1[lam]
         d_s_err = data1_err[lam]
         mu2, sig2, fm2 = spatial(data1, data1_err, lam)
-        p_x = gaus(xall, mu2, sig2)
+        p_x = utl.gaus(xall, mu2, sig2)
         data_wo_cr = np.array([])
         data_wo_cr_err = np.array([])
         for i in range(len(xall)):
