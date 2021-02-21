@@ -4,7 +4,8 @@ from matplotlib.widgets import TextBox
 from matplotlib.widgets import SpanSelector
 from matplotlib.widgets import Button
 import os
-from scipy.optimize import curve_fit as cft
+from scipy.optimize import minimize as mz
+import utils as utl
 
 fig, ax = plt.subplots(figsize=(16, 12))
 fig.subplots_adjust(bottom=0.2)
@@ -70,26 +71,25 @@ print(indices)
 # to find out mid-wavelength. And then assign this wavelength (in
 # pixel space) to user provided wavelength stored in new_data.
 
-def neg_gaussian(x, mu, sig, const):
-    xx = 1/np.sqrt(2*np.pi*sig*sig)
-    yy = np.exp(-0.5*((x-mu)/(sig))**2)
-    zz = -xx*yy + const
-    return zz
-
 mid_pix = []
 
-f1 = open(pt + '/Test/data.dat', 'w')
 
 for i in range(len(indices)):
     pix1 = t[int(indices[i][0]):int(indices[i][1])]
     fl1 = y[int(indices[i][0]):int(indices[i][1])]
     fle1 = ye[int(indices[i][0]):int(indices[i][1])]
-    for k in range(len(pix1)):
-        f1.write(str(pix1[k]) + '\t' + str(fl1[k]) + '\t' + str(fle1[k]) + '\n')
-    popt, pcov = cft(neg_gaussian, pix1, fl1, sigma=fle1)
-    print(popt)
+    xinit = np.array([(pix1[0] + pix1[-1])/2, 1, 1, 1])
+    def min_log_likelihood(x):
+        global pix1, fl1, fle1
+        model = utl.neg_gaus(pix1, x[0], x[1], x[2], x[3])
+        chi2 = (fl1 - model)/fle1
+        chi22 = np.sum(chi2**2)
+        yy = np.sum(np.log(fle1)) + 0.5*chi22
+        return yy
+    soln = mz(min_log_likelihood, xinit, method='L-BFGS-B')
     plt.plot(pix1, fl1)
-    plt.plot(pix1, neg_gaussian(pix1, *popt))
+    plt.plot(pix1, utl.neg_gaus(pix1, *soln.x))
     plt.show()
+    mid_pix.append(soln.x[0])
 
-f1.close()
+print(mid_pix)
