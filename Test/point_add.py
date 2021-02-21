@@ -46,6 +46,11 @@ text_box = TextBox(axbox, "Enter the corresponding\n wavelength here (in Angstro
 text_box.on_submit(submit)
 #text_box.set_val("")  # Trigger `submit` with the initial string.
 text_box.stop_typing()
+
+axnext = plt.axes([0.81, 0.05, 0.1, 0.075])
+bnext = Button(axnext, 'Next')
+bnext.on_clicked(callback.next)
+
 plt.show()
 
 print(new_data)
