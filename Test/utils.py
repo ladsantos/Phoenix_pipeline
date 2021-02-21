@@ -140,11 +140,3 @@ def neg_gaus(x, mu, sig, const, aa):
     yy = np.exp(-0.5*((x-mu)/sig)**2)
     zz = -aa*yy + const
     return zz
-
-def min_log_likelihood(x):
-    global pix, fl, fle
-    model = neg_gaus(pix, x[0], x[1], x[2], x[3])
-    chi2 = (fl - model)/fle
-    chi22 = np.sum(chi2**2)
-    yy = np.sum(np.log(fle)) + 0.5*chi22
-    return yy
