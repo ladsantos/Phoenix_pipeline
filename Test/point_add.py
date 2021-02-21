@@ -5,7 +5,7 @@ from matplotlib.widgets import SpanSelector
 from matplotlib.widgets import Button
 
 
-fig, ax = plt.subplots(figsize=(8, 6))
+fig, ax = plt.subplots(figsize=(16, 12))
 fig.subplots_adjust(bottom=0.2)
 
 t = np.arange(0.0, 5.0, 0.01)
@@ -46,14 +46,14 @@ span = SpanSelector(ax, onselect, 'horizontal', useblit=True,
                     rectprops=dict(alpha=0.5, facecolor='red'))
 
 # Adding a box to enter values
-axbox = fig.add_axes([0.2, 0.05, 0.5, 0.075])
+axbox = fig.add_axes([0.2, 0.05, 0.4, 0.075])
 text_box = TextBox(axbox, "Enter the corresponding\n wavelength here (in Angstrom)")
 text_box.on_submit(submit)
 #text_box.set_val("")  # Trigger `submit` with the initial string.
 text_box.stop_typing()
 
 # Enter button
-axenter = plt.axes([0.5, 0.05, 0.1, 0.075])
+axenter = plt.axes([0.7, 0.05, 0.1, 0.075])
 bnext = Button(axenter, 'Enter')
 bnext.on_clicked(enter)
 
