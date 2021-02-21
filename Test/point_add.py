@@ -4,13 +4,14 @@ from matplotlib.widgets import TextBox
 from matplotlib.widgets import SpanSelector
 from matplotlib.widgets import Button
 import os
+from scipy.optimize import curve_fit as cft
 
 fig, ax = plt.subplots(figsize=(16, 12))
 fig.subplots_adjust(bottom=0.2)
 
 pt = os.getcwd()
 
-t, y = np.loadtxt(pt + '/Test/cosmic_normal_sky_sub_2009oct30_0009.fits_flux.dat', usecols=(0,1), unpack=True)
+t, y, ye = np.loadtxt(pt + '/Test/cosmic_normal_sky_sub_2009oct30_0009.fits_flux.dat', usecols=(0,1, 2), unpack=True)
 
 l = ax.plot(t, y, lw=2)
 ax.set_title('Press left mouse button and drag to test')
@@ -62,5 +63,33 @@ plt.show()
 print(new_data)
 print(indices)
 
-def neg_gaussian(x, mu, sig):
-    xx = 
+# new_data has values of mid-wavelength of lines in Angstrom
+# indices has indices of the starting and ending point of lines
+# 
+# We want to fit a Gaussian to pixel-flux (with flux-error) data
+# to find out mid-wavelength. And then assign this wavelength (in
+# pixel space) to user provided wavelength stored in new_data.
+
+def neg_gaussian(x, mu, sig, const):
+    xx = 1/np.sqrt(2*np.pi*sig*sig)
+    yy = np.exp(-0.5*((x-mu)/(sig))**2)
+    zz = -xx*yy + const
+    return zz
+
+mid_pix = []
+
+f1 = open(pt + '/Test/data.dat', 'w')
+
+for i in range(len(indices)):
+    pix1 = t[int(indices[i][0]):int(indices[i][1])]
+    fl1 = y[int(indices[i][0]):int(indices[i][1])]
+    fle1 = ye[int(indices[i][0]):int(indices[i][1])]
+    for k in range(len(pix1)):
+        f1.write(str(pix1[k]) + '\t' + str(fl1[k]) + '\t' + str(fle1[k]) + '\n')
+    popt, pcov = cft(neg_gaussian, pix1, fl1, sigma=fle1)
+    print(popt)
+    plt.plot(pix1, fl1)
+    plt.plot(pix1, neg_gaussian(pix1, *popt))
+    plt.show()
+
+f1.close()
