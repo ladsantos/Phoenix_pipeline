@@ -61,3 +61,6 @@ plt.show()
 
 print(new_data)
 print(indices)
+
+def neg_gaussian(x, mu, sig):
+    xx = 
