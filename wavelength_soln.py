@@ -80,12 +80,6 @@ def wave_soln(path, fname):
 
     plt.show()
 
-    print('Newdata')
-    print(new_data)
-    print('Indices')
-    print(indices)
-    print(indices[0])
-
     # new_data has values of mid-wavelength of lines in Angstrom
     # indices has indices of the starting and ending point of lines
     # 
@@ -103,20 +97,14 @@ def wave_soln(path, fname):
         pix1 = pix[aa:bb]
         fl1 = fl[aa:bb]
         fle1 = fle[aa:bb]
-        print('pix1')
-        print(pix1)
         xinit = np.array([(pix1[0] + pix1[-1])/2, 1, 1, 1])
         def min_log_likelihood(x):
-            global pix1, fl1, fle1
             model = utl.neg_gaus(pix1, x[0], x[1], x[2], x[3])
             chi2 = (fl1 - model)/fle1
             chi22 = np.sum(chi2**2)
             yy = np.sum(np.log(fle1)) + 0.5*chi22
             return yy
         soln = mz(min_log_likelihood, xinit, method='L-BFGS-B')
-        plt.plot(pix1, fl1)
-        plt.plot(pix1, utl.neg_gaus(pix1, *soln.x))
-        plt.show()
         mid_pix.append(soln.x[0])
 
     mid_wave_pix = np.asarray(mid_pix)
@@ -125,17 +113,3 @@ def wave_soln(path, fname):
     popt, pcov = cft(utl.line, mid_wave_pix, mid_wave_lam)
 
     return popt, pcov
-
-ptt = os.getcwd() + '/Test/'
-fmane =  'cosmic_normal_sky_sub_2009oct30_0009.fits_flux.dat'
-
-pp1, pc1 = wave_soln(ptt, fmane)
-print(pp1, pc1)
-
-p1, f1, fe1 = np.loadtxt(ptt + fmane, usecols=(0,1,2), unpack=True)
-w1 = utl.line(p1, *pp1)
-
-plt.errorbar(p1, f1, yerr=fe1)
-plt.show()
-plt.errorbar(w1, f1, yerr=fe1)
-plt.show()
