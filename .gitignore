@@ -141,3 +141,10 @@ cython_debug/
 
 # PyCharm stuff
 .idea/
+Test/cosmic_normal_sky_sub_2009oct30_0009.fits_flux.dat
+Test/cosmic_normal_sky_sub_2009oct30_0010.fits_flux.dat
+Test/cosmic_normal_sky_sub_2009oct30_0011.fits_flux.dat
+Test/normal_sky_sub_2009oct30_0009.fits_flux.dat
+Test/normal_sky_sub_2009oct30_0010.fits_flux.dat
+Test/normal_sky_sub_2009oct30_0011.fits_flux.dat
+Test/data.dat
