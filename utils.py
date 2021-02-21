@@ -140,3 +140,21 @@ def neg_gaus(x, mu, sig, const, aa):
     yy = np.exp(-0.5*((x-mu)/sig)**2)
     zz = -aa*yy + const
     return zz
+
+# Defining a Gaussian to create Spatial Image
+def gaus(x, mu, sigma):
+    a1 = np.sqrt(2*np.pi*sigma*sigma)**-1
+    a2 = np.exp(-0.5*((x-mu)/sigma)**2)
+    return a1*a2
+
+#------------------------------------------------------------------
+#---------------------Line----------------------------
+#------------------------------------------------------------------
+# Defining line and inverse line
+def line(x, m, c):
+    return m*x + c
+
+def inv_line(x, m, c):
+    bc = (x-c)/m
+    return bc
+
