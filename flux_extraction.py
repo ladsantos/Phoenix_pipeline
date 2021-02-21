@@ -12,7 +12,6 @@ def flux_extraction(file_name, file_err_name, path, path_err, out_path, images=T
     """
     Parameters
     ----------
-    ----------
     file_name : str
             Name of the image/telluric file
             from which flux has to be extracted

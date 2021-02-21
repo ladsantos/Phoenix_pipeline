@@ -19,7 +19,6 @@ def calibrate_images(x_d, x_f, x_s, it_s = 'object', x_b = '', ):
     """
     Parameters
     ----------
-    ----------
     x_b : str
         Path of the bias files.
         By default bias is not provided
