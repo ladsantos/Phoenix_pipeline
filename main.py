@@ -97,6 +97,35 @@ for i in range(len(list3)):
 it_s = imgtyp[0]
 
 #-------------------------------------------
+#-------- For Telluric files ---------------
+#-------------------------------------------
+
+print('                                                   ')
+print('For Telluric files:')
+print('-------------------')
+print('                   ')
+input('Press Enter to choose the directory of Telluric files...')
+pt_t1 = filedialog.askdirectory(title='Choose Telluric files directory')
+pt_t = pt_t1 + '/'
+
+'''
+list5 = os.listdir(pt_t)
+print(list5)
+for i in range(len(list5)):
+    os.system('mv ' + pt_t + list5[i] + ' ' + pt_t + 'telluric_' + list5[i])
+'''
+list4 = glob.glob(pt_t + '*.fits')
+imgtyp1 = []
+for i in range(len(list4)):
+    hdul = fits.open(list4[i])
+    h1 = hdul[0].header
+    if h1['view_pos'][0:4] == 'open':
+        h22 = h1['imagetyp']
+        imgtyp1.append(h22)
+
+it_t = imgtyp1[0]
+
+#-------------------------------------------
 #--------- For Output files ----------------
 #-------------------------------------------
 
@@ -108,7 +137,10 @@ print('To save output files, the program will create')
 print('a folder named Output within your chosen directory.')
 input('Press Enter to choose the directory to dump output files...')
 pt_out1 = filedialog.askdirectory()
-os.mkdir(pt_out1 + '/Output')
+try:
+    os.mkdir(pt_out1 + '/Output')
+except:
+    pt_out = pt_out1 + '/Output'
 pt_out = pt_out1 + '/Output'
 
 #-------------------------------------------
@@ -116,6 +148,17 @@ pt_out = pt_out1 + '/Output'
 #-------------------------------------------
 print('                                                   ')
 print('Calibration Starting...')
+print('For Tellurics...')
+print('-----------------------')
+print('                  ')
+cbr.calibrate_images(x_d=pt_d, x_f=pt_f, x_s=pt_t, it_s=it_t, x_b=pt_b)
+os.system('rm -r ' + pt_d + 'cali_dark')
+os.system('rm -r ' + pt_f + 'cali_flat')
+
+if pt_b != '':
+    os.system('rm -r ' + pt_b + 'cali_bias')
+
+print('For Science...')
 print('-----------------------')
 print('                  ')
 cbr.calibrate_images(x_d=pt_d, x_f=pt_f, x_s=pt_s, it_s=it_s, x_b=pt_b)
@@ -128,12 +171,31 @@ print('                   ')
 p1 = pt_s + 'Final_calibrated_science/'
 p2 = pt_s + 'Error_final_calibrated_science/'
 
+# Path of calibrated Telluric files
+p1_t = pt_t + 'Final_calibrated_science/'
+p2_t = pt_t + 'Error_final_calibrated_science/'
+
 #-------------------------------------------
 #----------- Flux Extraction ---------------
 #-------------------------------------------
 print('Flux Extraction Starting...')
 print('---------------------------')
 print('                           ')
+# For Tellurics
+print('For Tellurics...')
+# Flux directory
+os.mkdir(pt_t + 'Flux_t/')
+file_cali_t = os.listdir(p1_t)
+file_cali_t.sort(key = utl.natural_keys)
+file_cali_err_t = os.listdir(p2_t)
+file_cali_err_t.sort(key = utl.natural_keys)
+# Simple Flux Extraction
+p3_t = pt_t + 'Flux_t/'
+for j in range(len(file_cali_t)):
+    fx.flux_extraction(file_name = file_cali_t[j], file_err_name = file_cali_err_t[j], path = p1_t, path_err=p2_t, out_path = p3_t, images=False)
+
+# For Science
+print('For Science...')
 # Flux directory
 os.mkdir(pt_s + 'Flux/')
 file_cali = os.listdir(p1)
@@ -155,6 +217,23 @@ print('                       ')
 print('Flux Normalization and Cosmic Rays removal starting...')
 print('------------------------------------------------------')
 print('                                                      ')
+print('For Tellurics...')
+flux_files_t = os.listdir(p3_t)
+flux_files_t.sort(key=utl.natural_keys)
+for i in range(len(flux_files_t)):
+    nml.normal_spectrum(p3_t, flux_files_t[i], p3_t)
+
+nml_files1_t = os.listdir(p3_t)
+nml_files_t = []
+for i in range(len(nml_files1_t)):
+    if nml_files1_t[i][0:6] == 'normal':
+        nml_files_t.append(nml_files1_t[i])
+
+nml_files_t.sort(key=utl.natural_keys)
+csr.cosmic_removal(p3_t, nml_files_t, p3_t)
+
+print('                                                      ')
+print('For Science...')
 flux_files = os.listdir(p3)
 flux_files.sort(key=utl.natural_keys)
 for i in range(len(flux_files)):
@@ -183,9 +262,13 @@ if pt_b != '':
 os.system('mv ' + pt_d + 'cali_dark ' + pt_out)
 os.system('mv ' + pt_f + 'cali_flat ' + pt_out)
 os.system('mv ' + pt_s + 'cali_science ' + pt_out)
+os.system('mv ' + pt_t + 'cali_science ' + pt_out + '/cali_telluric')
 os.system('mv ' + p1 + ' ' + pt_out)
 os.system('mv ' + p2 + ' ' + pt_out)
 os.system('mv ' + p3 + ' ' + pt_out)
+os.system('mv ' + p1_t + ' ' + pt_out + '/Final_calibrated_telluric')
+os.system('mv ' + p2_t + ' ' + pt_out + '/Error_final_calibrated_telluric')
+os.system('mv ' + p3_t + ' ' + pt_out)
 
 print('This pipleline is currently under developement...')
 print('The latest stage is the extraction of normalized')
