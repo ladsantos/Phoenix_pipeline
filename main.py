@@ -12,6 +12,7 @@ import calibration as cbr
 import flux_extraction as fx
 import normalization as nml
 import cosmic_rays as csr
+import wavelength_soln as wsoln
 from tkinter import filedialog
 from tkinter import *
 import glob
@@ -269,6 +270,52 @@ os.system('mv ' + p3 + ' ' + pt_out)
 os.system('mv ' + p1_t + ' ' + pt_out + '/Final_calibrated_telluric')
 os.system('mv ' + p2_t + ' ' + pt_out + '/Error_final_calibrated_telluric')
 os.system('mv ' + p3_t + ' ' + pt_out)
+
+
+#-------------------------------------------
+#--- Wavelength Calibration in Tellurics ---
+#-------------------------------------------
+
+pt_tel = pt_out +'/Flux_t/'
+list5 = os.listdir(pt_tel)
+csr_tel = []
+for i in range(len(list5)):
+    if list5[i][0:6] == 'cosmic':
+        csr_tel.append(list5[i])
+
+soln_m = np.array([])
+soln_c = np.array([])
+
+for i in range(len(csr_tel)):
+    popt, pcov = wsoln.wave_soln(pt_tel, csr_tel[i])
+    soln_m = np.hstack((soln_m, popt[0]))
+    soln_c = np.hstack((soln_c, popt[1]))
+
+# Linear Solution of the Wavelength Calibration
+
+avg_soln_m = np.mean(soln_m)
+avg_soln_c = np.mean(soln_c)
+
+# Applying this to Science files
+pt_sci = pt_out + '/Flux/'
+list6 = os.listdir(pt_sci)
+csr_sci = []
+for i in range(len(list6)):
+    if list6[i][0:6] == 'cosmic':
+        csr_sci.append(list6[i])
+
+# Creating a directory to save Spectrum files
+os.mkdir(pt_out + '/Spectrum')
+pt_spectrum = pt_out + '/Spectrum/'
+
+for i in range(len(csr_sci)):
+    pix, fl, fle = np.loadtxt(pt_sci + csr_sci[i], usecols=(0,1,2), unpack=True)
+    wave = utl.line(pix, avg_soln_m, avg_soln_c)
+    f1 = open(pt_spectrum + 'spectra_' + csr_sci[i][22:], 'w')
+    f1.write('#Wavelength (in A)\t Flux \t Flux Error\n')
+    for j in range(len(wave)):
+        f1.write(str(wave[j]) + '\t' + str(fl[j]) + '\t' + str(fle[j]) + '\n')
+    f1.close()
 
 print('This pipleline is currently under developement...')
 print('The latest stage is the extraction of normalized')
