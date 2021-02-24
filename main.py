@@ -317,7 +317,6 @@ for i in range(len(csr_sci)):
         f1.write(str(wave[j]) + '\t' + str(fl[j]) + '\t' + str(fle[j]) + '\n')
     f1.close()
 
-print('This pipleline is currently under developement...')
-print('The latest stage is the extraction of normalized')
-print('spectrum with cosmic rays removed...')
-print('These files you can access in the Output folder, Flux directory...')
+print('                                                                  ')
+print('The process completed successfully...')
+print('Data files for Spectrum is stored in \'Spectrum\' folder in the Output directory...')
