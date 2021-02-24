@@ -69,13 +69,13 @@ def wave_soln(path, fname):
 
     # Adding a box to enter values
     axbox1 = fig.add_axes([0.2, 0.05, 0.4, 0.075])
-    text_box1 = TextBox(axbox1, "Enter the corresponding\n wavelength here (in Angstrom)")
+    text_box1 = TextBox(axbox1, "Enter the corresponding\n wavelength here (in Angstrom)\n Then press Calibrate")
     text_box1.on_submit(submit)
     #text_box1.stop_typing()
 
     # Enter button
     axenter = plt.axes([0.7, 0.05, 0.1, 0.075])
-    bnext = Button(axenter, 'Enter')
+    bnext = Button(axenter, 'Calibrate')
     bnext.on_clicked(enter)
 
     plt.show()
